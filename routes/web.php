@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CacheController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
@@ -58,3 +59,5 @@ Route::get('/language/{lang}', [LanguageController::class, 'change_lang'])->name
 Route::get('/newpost/{user}/notification', [NotificationController::class, 'index'])->name('user.notification');
 Route::get('/newpost/{notification}/read', [NotificationController::class, 'read'])->name('user.read');
 
+
+Route::get('/cache', [CacheController::class, 'index']);
