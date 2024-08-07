@@ -11,7 +11,9 @@ class PostLikeController extends Controller
         $this->middleware('auth');
     }
 
-    public function store(Request $req, Post $post){
+    public function store(Request $req, Post $post) {
+        $this->clearCache();
+
         if(!$post->likedBy($req->user())){
             $post->likes()->create([
                 'user_id' => $req->user()->id,
@@ -26,6 +28,8 @@ class PostLikeController extends Controller
     }
 
     public function destroy(Request $req, Post $post){
+        $this->clearCache();
+
         $post->likes()->where('user_id', $req->user()->id)->delete();
         
         return back();

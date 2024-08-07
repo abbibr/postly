@@ -61,3 +61,5 @@ Route::get('/newpost/{notification}/read', [NotificationController::class, 'read
 
 
 Route::get('/cache', [CacheController::class, 'index']);
+
+Route::get('/lock', [UserPostController::class, 'testLock']);

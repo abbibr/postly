@@ -14,8 +14,14 @@
                         </div>
                     @endsession
 
-                    @session('update')
+                    @error('error')
                         <div class="bg-red-500 p-4 rounded-lg mb-6 text-white text-center">
+                            {{ $message }}
+                        </div>
+                    @enderror
+
+                    @session('update')
+                        <div class="bg-yellow-500 p-4 rounded-lg mb-6 text-white text-center">
                             {{ session('update') }}
                         </div>
                     @endsession

@@ -3,9 +3,10 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\User;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Post>
  */
 class PostFactory extends Factory
 {
@@ -17,8 +18,8 @@ class PostFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => 7,
-            'body' => $this->faker->sentence()
+            'user_id' => User::factory(),
+            'body' => $this->faker->unique()->sentence()
         ];
     }
 }

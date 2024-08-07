@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Notifications\CreatePostNotification;
+use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\User;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\DeleteMail;
 use Illuminate\Support\Facades\Notification;
+use Cache, DB;
+use Illuminate\Validation\ValidationException as Validation;
 
 class PostController extends Controller
 {
@@ -25,7 +28,9 @@ class PostController extends Controller
         # Bu boshlang`ich holatidagi til turini chiqaradi (en)
         // dump(App::currentLocale());
 
-        $posts = Post::latest()->with(['user', 'likes'])->paginate(10);
+        $posts = Cache::remember('posts' . request('page', 1), now()->addRealHours(24), function () {
+            return Post::latest()->with(['user', 'likes'])->paginate(10);
+        });
 
         return view('posts.index', [
             'posts' => $posts
@@ -34,24 +39,35 @@ class PostController extends Controller
 
     public function store(Request $req)
     {
+        $checking = Cache::lock('smthLock', 10);
+        
         $this->validate($req, [
-            'body' => 'required|max:255',
+            'body' => "required|max:255",
         ]);
 
-        $post = $req->user()->posts()->create([
-            'body' => $req->body
-        ]);
+        if ($checking->get()) {
+            $this->clearCache();
 
-        PostCreated::dispatch($post);
+            $post = $req->user()->posts()->create([
+                'body' => $req->body
+            ]);
 
-        // $req->user()->notify(new CreatePostNotification($post));
-        Notification::send($req->user(), new CreatePostNotification($post));
+            PostCreated::dispatch($post);
+    
+            // $req->user()->notify(new CreatePostNotification($post));
+            Notification::send($req->user(), new CreatePostNotification($post));
 
-        return back()->with('post', 'Post created successfully!');
+            return back()->with('post', 'Post created successfully!');
+        }
+        else {
+            throw Validation::withMessages([
+                'error' => 'Somebody stored this one!'
+            ]);
+        }
     }
 
     /* public function likes(){
-        $posts = Post::find(38);
+        $posts = Post::find(38);    
         $users = User::find(7);
         dd($posts->likes[0]->user_id);
     } */
@@ -65,6 +81,8 @@ class PostController extends Controller
         else{
             return response(null, 409);
         } */
+
+        $this->clearCache();
 
         $this->authorize('delete', $post);
 
@@ -107,9 +125,10 @@ class PostController extends Controller
 
     public function deleteForever(Post $post, Request $req)
     {
-        if($post->trashed())
+        if ($post->trashed()) 
         {
             $post->forceDelete();
+
             return back()->with('forceDelete', 'You deleted your post forever!');
         }
     }
@@ -128,6 +147,8 @@ class PostController extends Controller
         /* $this->validate($req, [
             'body' => 'required'
         ]); */
+
+        $this->clearCache();
 
         $this->authorize('update', $post);
 

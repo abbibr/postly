@@ -21,6 +21,6 @@ class PostSeeder extends Seeder
             'created_at' => \Carbon\Carbon::now()
         ]); */
 
-        Post::factory(5)->create();
+        Post::factory(50)->create();
     }
 }
